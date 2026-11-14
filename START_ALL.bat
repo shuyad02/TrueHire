@@ -21,13 +21,17 @@ start "TrueHire Web Portal [Port 3000]" cmd /k "cd /d "%~dp0web" && npm run dev"
 
 echo.
 echo  =============================================================
-echo       All TrueHire services are now LIVE!
+echo       All TrueHire services are launching!
 echo  =============================================================
 echo.
 echo   - Web Frontend  : http://localhost:3000
 echo   - Backend API   : http://localhost:4000
 echo   - AI Service    : http://localhost:5000
 echo.
-echo  Do NOT close the opened terminal windows while using TrueHire.
+echo  Opening browser at http://localhost:3000 ...
+timeout /t 6 /nobreak > nul
+start http://localhost:3000
+echo.
+echo  NOTE: Keep the opened terminal windows running in the background.
 echo.
 pause

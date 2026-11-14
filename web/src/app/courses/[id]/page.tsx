@@ -1,7 +1,6 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Clock, Star, Users, CheckCircle2, Shield, Award, Loader2, BookOpen } from "lucide-react";
 import * as Tabs from "@radix-ui/react-tabs";
@@ -36,7 +35,6 @@ const LEVEL_LABELS: Record<string, string> = {
 
 export default function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const searchParams = useSearchParams();
   const { user } = useAuthStore();
   const router = useRouter();
   const [course, setCourse] = useState<any>(null);

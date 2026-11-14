@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { Sparkles, AlertCircle } from "lucide-react";
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setAuth } = useAuthStore();
   const [error, setError] = useState("");
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -34,7 +35,7 @@ export default function AuthCallbackPage() {
     }
 
     // Fetch full user info from backend using the token
-    fetch("http://localhost:4000/api/auth/me", {
+    fetch(`${API_URL}/api/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -55,7 +56,7 @@ export default function AuthCallbackPage() {
         setError("User info fetch nahi ho saki. Wapas login page par ja rahe hain...");
         setTimeout(() => router.push("/login"), 2000);
       });
-  }, [searchParams, router, setAuth]);
+  }, [searchParams, router, setAuth, API_URL]);
 
   return (
     <div className="min-h-screen hero-gradient flex items-center justify-center">
@@ -86,5 +87,19 @@ export default function AuthCallbackPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen hero-gradient flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin" />
+        </div>
+      }
+    >
+      <AuthCallbackContent />
+    </Suspense>
   );
 }
