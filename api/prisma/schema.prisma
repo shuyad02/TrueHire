@@ -1,0 +1,397 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  COMPANY
+  COLLEGE
+  ADMIN
+  INSTRUCTOR
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  INTERNSHIP
+  CONTRACT
+  REMOTE
+}
+
+enum ExperienceLevel {
+  FRESHER
+  ZERO_TO_ONE
+  ONE_TO_THREE
+  THREE_TO_FIVE
+}
+
+enum JobStatus {
+  ACTIVE
+  PAUSED
+  CLOSED
+  EXPIRED
+}
+
+enum AppStatus {
+  APPLIED
+  VIEWED
+  SHORTLISTED
+  INTERVIEW
+  OFFERED
+  REJECTED
+  WITHDRAWN
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum InterviewType {
+  TECHNICAL
+  HR
+  BEHAVIORAL
+  CASE_STUDY
+}
+
+enum TransactionType {
+  COURSE_PURCHASE
+  SUBSCRIPTION
+  BOOTCAMP
+  ISA_REPAYMENT
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum ProficiencyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+// ─── USER ────────────────────────────────────────────────────────────────────
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String?
+  role          Role     @default(STUDENT)
+  isVerified    Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  oauthProvider String?
+  oauthId       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  studentProfile  StudentProfile?
+  companyProfile  CompanyProfile?
+  collegeProfile  CollegeProfile?
+  notifications   Notification[]
+  transactions    Transaction[]
+  courses         Course[]        @relation("InstructorCourses")
+}
+
+// ─── STUDENT PROFILE ─────────────────────────────────────────────────────────
+
+model StudentProfile {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName            String
+  phone               String?
+  avatarUrl           String?
+  bio                 String?
+  college             String?
+  degree              String?
+  graduationYear      Int?
+  cgpa                Float?
+  city                String?
+  state               String?
+  githubUrl           String?
+  linkedinUrl         String?
+  portfolioUrl        String?
+  resumeUrl           String?
+  hireReadyScore      Int      @default(0)
+  isHireReady         Boolean  @default(false)
+  expectedSalaryMin   Int?
+  expectedSalaryMax   Int?
+  preferredLocations  String[]
+  preferredJobTypes   String[]
+  openToWork          Boolean  @default(true)
+  skills              String[]
+  createdAt           DateTime @default(now())
+
+  applications  Application[]
+  enrollments   Enrollment[]
+  studentSkills StudentSkill[]
+  mockInterviews MockInterview[]
+  certifications Certification[]
+}
+
+// ─── COMPANY PROFILE ─────────────────────────────────────────────────────────
+
+model CompanyProfile {
+  id                  String             @id @default(uuid())
+  userId              String             @unique
+  user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName         String
+  logoUrl             String?
+  website             String?
+  description         String?
+  industry            String?
+  companySize         String?
+  foundedYear         Int?
+  gstNumber           String?
+  cinNumber           String?
+  mcaVerified         Boolean            @default(false)
+  gstVerified         Boolean            @default(false)
+  verificationStatus  VerificationStatus @default(PENDING)
+  verificationDate    DateTime?
+  city                String?
+  state               String?
+  rating              Float              @default(0.0)
+  totalReviews        Int                @default(0)
+  createdAt           DateTime           @default(now())
+
+  jobs Job[]
+}
+
+// ─── COLLEGE PROFILE ─────────────────────────────────────────────────────────
+
+model CollegeProfile {
+  id                    String   @id @default(uuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collegeName           String
+  logoUrl               String?
+  city                  String?
+  state                 String?
+  affiliation           String?
+  naacGrade             String?
+  totalStudents         Int?
+  placementOfficerName  String?
+  placementOfficerPhone String?
+  subscriptionPlan      String?
+  subscriptionExpiresAt DateTime?
+  createdAt             DateTime @default(now())
+}
+
+// ─── JOB ─────────────────────────────────────────────────────────────────────
+
+model Job {
+  id                  String          @id @default(uuid())
+  companyId           String
+  company             CompanyProfile  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  title               String
+  description         String
+  requirements        String
+  responsibilities    String?
+  jobType             JobType         @default(FULL_TIME)
+  experienceLevel     ExperienceLevel @default(FRESHER)
+  salaryMin           Int
+  salaryMax           Int
+  salaryCurrency      String          @default("INR")
+  location            String
+  isRemote            Boolean         @default(false)
+  skillsRequired      String[]
+  educationRequired   String?
+  openings            Int             @default(1)
+  applicationDeadline DateTime?
+  status              JobStatus       @default(ACTIVE)
+  isFeatured          Boolean         @default(false)
+  viewsCount          Int             @default(0)
+  applicationsCount   Int             @default(0)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  applications Application[]
+}
+
+// ─── COURSE ──────────────────────────────────────────────────────────────────
+
+model Course {
+  id              String      @id @default(uuid())
+  instructorId    String
+  instructor      User        @relation("InstructorCourses", fields: [instructorId], references: [id])
+  title           String
+  slug            String      @unique
+  description     String?
+  thumbnailUrl    String?
+  previewVideoUrl String?
+  category        String?
+  subcategory     String?
+  level           CourseLevel @default(BEGINNER)
+  language        String      @default("Hindi+English")
+  durationHours   Float?
+  totalLessons    Int         @default(0)
+  price           Int         @default(0)
+  discountedPrice Int?
+  isFree          Boolean     @default(false)
+  isPublished     Boolean     @default(false)
+  skillsCovered   String[]
+  certificateProvided Boolean @default(true)
+  rating          Float       @default(0.0)
+  totalStudents   Int         @default(0)
+  totalReviews    Int         @default(0)
+  createdAt       DateTime    @default(now())
+
+  enrollments    Enrollment[]
+  certifications Certification[]
+}
+
+// ─── ENROLLMENT ──────────────────────────────────────────────────────────────
+
+model Enrollment {
+  id                  String    @id @default(uuid())
+  studentId           String
+  student             StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  courseId            String
+  course              Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  enrolledAt          DateTime  @default(now())
+  completedAt         DateTime?
+  progressPercentage  Int       @default(0)
+  isCompleted         Boolean   @default(false)
+  certificateUrl      String?
+  amountPaid          Int       @default(0)
+  paymentId           String?
+
+  @@unique([studentId, courseId])
+}
+
+// ─── SKILL ASSESSMENT ────────────────────────────────────────────────────────
+
+model SkillAssessment {
+  id              String   @id @default(uuid())
+  name            String
+  skill           String
+  description     String?
+  durationMinutes Int?
+  totalQuestions  Int?
+  passingScore    Int      @default(70)
+  createdAt       DateTime @default(now())
+
+  studentSkills  StudentSkill[]
+  certifications Certification[]
+}
+
+// ─── STUDENT SKILL ────────────────────────────────────────────────────────────
+
+model StudentSkill {
+  id              String           @id @default(uuid())
+  studentId       String
+  student         StudentProfile   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  skillName       String
+  proficiencyLevel ProficiencyLevel @default(BEGINNER)
+  score           Int?
+  verified        Boolean          @default(false)
+  assessmentId    String?
+  assessment      SkillAssessment? @relation(fields: [assessmentId], references: [id])
+  assessedAt      DateTime?
+  createdAt       DateTime         @default(now())
+}
+
+// ─── APPLICATION ─────────────────────────────────────────────────────────────
+
+model Application {
+  id           String         @id @default(uuid())
+  jobId        String
+  job          Job            @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status       AppStatus      @default(APPLIED)
+  coverLetter  String?
+  resumeUrl    String?
+  appliedAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  companyNotes String?
+  matchScore   Int?
+
+  @@unique([jobId, studentId])
+}
+
+// ─── MOCK INTERVIEW ──────────────────────────────────────────────────────────
+
+model MockInterview {
+  id                 String        @id @default(uuid())
+  studentId          String
+  student            StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  jobRole            String?
+  interviewType      InterviewType @default(TECHNICAL)
+  videoUrl           String?
+  transcript         String?
+  aiFeedback         String?
+  overallScore       Int?
+  confidenceScore    Int?
+  communicationScore Int?
+  technicalScore     Int?
+  createdAt          DateTime      @default(now())
+}
+
+// ─── CERTIFICATION ────────────────────────────────────────────────────────────
+
+model Certification {
+  id                String          @id @default(uuid())
+  studentId         String
+  student           StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  courseId          String?
+  course            Course?         @relation(fields: [courseId], references: [id])
+  assessmentId      String?
+  assessment        SkillAssessment? @relation(fields: [assessmentId], references: [id])
+  certificateNumber String          @unique
+  certificateUrl    String?
+  blockchainHash    String?
+  issuedAt          DateTime        @default(now())
+  expiresAt         DateTime?
+  issuer            String          @default("TrueHire")
+  isValid           Boolean         @default(true)
+}
+
+// ─── NOTIFICATION ────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  actionUrl String?
+  createdAt DateTime @default(now())
+}
+
+// ─── TRANSACTION ─────────────────────────────────────────────────────────────
+
+model Transaction {
+  id               String            @id @default(uuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type             TransactionType
+  amount           Int
+  currency         String            @default("INR")
+  status           TransactionStatus @default(PENDING)
+  razorpayOrderId  String?
+  razorpayPaymentId String?
+  createdAt        DateTime          @default(now())
+}
