@@ -296,7 +296,7 @@ Distributed under the **MIT License**. See `LICENSE` for more information.
 
 <div align="center">
 
-Made with ❤️ by [**Lokesh Yadav**](https://github.com/shuyad02)
+Made with ❤️ by [**Shubhash Yadav**](https://github.com/shuyad02)
 
 ⭐ If you find this project helpful or inspiring, please give it a **Star** on GitHub! ⭐
 
